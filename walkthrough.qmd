@@ -88,8 +88,458 @@ The console is where you can send messages to from your program. The console is 
 - The map pane also has the ability to add and remove layers.
 :::
 
-## Implementing a ship routing algorithm in Earth Engine
+## Finding locations likely to be inland ports using Earth Engine
+  
+![](/Images/PortMap.png){fig-align="center"}
 
 ::: {.notes}
-You walk through
+- The US has 12 major inland ports and over 100 smaller inland ports. Can we use Earth Engine to create a method that locates places likely to have a major port?
+- Let's assume that ports will:
+  1. Be located at the nexus of major rivers and highways
+  2. Be located in reasonably big cities.
 :::
+
+## Viewing highways {auto-animate=true}
+
+```javascript
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+```
+## Viewing highways {auto-animate=true}
+
+```javascript
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+```
+
+## Viewing highways {auto-animate=true}
+
+```javascript
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+```
+
+## Adding streams {auto-animate="true"}
+
+```{.javascript code-line-numbers="4-6"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds = 
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+```
+## Adding streams {auto-animate="true"}
+
+```{.javascript code-line-numbers="4-6,11-14"} 
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+```
+
+## Adding streams {auto-animate="true"} 
+
+```{.javascript code-line-numbers="22-29"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+```
+
+## Finding intersection points {auto-animate="true"} 
+
+```{.javascript code-line-numbers="16-27"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+```
+## Finding intersection points {auto-animate="true"} 
+
+```{.javascript code-line-numbers="29-41"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+```
+## Finding intersection points {auto-animate="true"} 
+
+```{.javascript code-line-numbers="43-49"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var intersectionPointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+```
+## Viewing intersection points {auto-animate="true"} 
+
+```{.javascript code-line-numbers="66-67"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var intersectionPointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
+Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+
+```
+## Sampling population densities {auto-animate="true"} 
+
+```{.javascript code-line-numbers="51-65"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var intersectionPointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Create a sequence of numbers to use as IDs
+var ids = ee.List
+            .sequence(0, intersectionPoints.size().subtract(1));
+
+// Function to buffer a point and set an ID
+var bufferAndSetID = function(index) {
+  // Get the point
+  var point = ee.Feature(intersectionPointsList.get(index));
+  // Buffer the point
+  var bufferedPoint = point.buffer(10000);
+  // Set the ID
+  var bufferedPointWithID = bufferedPoint.set('ID', index);
+  // Return the buffered point with ID
+  return bufferedPointWithID;
+};
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
+Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+
+```
