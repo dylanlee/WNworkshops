@@ -1,0 +1,95 @@
+---
+title: "An introduction to Google Earth Engine"
+title-slide-attributes:
+  data-background-image: /Images/_MODIS_Pic.jpg 
+  data-background-size: cover
+  data-background-opacity: "0.5"
+format: 
+  revealjs:
+    width: 950
+    height: 950
+    theme: dark
+css: walkthrough.css
+---
+
+## What is Google Earth Engine?
+
+![](/Images/EarthEngineSplashPage.png)
+
+::: {.notes}
+Google Earth Engine is a platform for geospatial analysis. It provides access to satellite imagery and other remote sensing data. Earth Engine simplifies the task of processing geospatial data.
+:::
+
+## Earth Engine Code Editor
+
+![](/Images/EarthEngineEditor.png)
+
+::: {.notes}
+The Earth Engine Code Editor is a web-based IDE for accessing the Earth Engine datasets and analysis library using javascript. We're going to do a quick walkthrough of the editor and some of its capabilities.
+::: 
+
+## Inserting data using the search bar
+
+![](/Videos/SearchBar.gif){fig-align="center"}
+
+::: {.notes}
+The search bar in Earth Engine Editor allows you to easily find and *import* datasets and satellite imagery for analysis. Here we're importing landsat 8 reflectance data.
+:::
+
+## Browsing library reference
+
+![](/Videos/docquery.gif){fig-align="center"}
+
+## The scripts pane
+
+![](/Videos/openscript.gif){fig-align="center"}
+
+::: {.notes}
+The scripts tab allows you to access your scripts.
+:::
+
+## The assets pane
+
+![](/Videos/ImportingAssets.gif){fig-align="center"}
+
+::: {.notes}
+This tab allows you to upload your own geospatial data into the editor. Here we will upload a shape file from the US flood inundation map repostiory.
+verbally walk through:
+- uploading assets. Mention the task pane as place where uploading and downloading takes place
+- opening script to display vector fill map
+- importing assets. Show that asset shows up in script
+- run script then going to map to view asset
+:::
+
+## The inspector
+
+![](/Videos/inspector.gif){fig-align="center"}
+
+::: {.notes}
+The inspector allows you to examine the assets being used or produced by a script.
+- go over how the vertices of each of the polygons in the flood fill map can be accessed in the 
+- go over examining the metadata fields of the flood
+:::
+
+## The console
+
+![](/Videos/console.gif){fig-align="center"}
+
+::: {.notes}
+The console is where you can send messages to from your program. The console is also where error messages appear.
+:::
+
+## The map pane
+
+![](/Videos/MapPane.gif){fig-align="center"}
+
+::: {.notes}
+- In the map pane you can draw points, lines, or polygons and have those geometries show up in your script.
+- The map pane also has the ability to add and remove layers.
+:::
+
+## Implementing a ship routing algorithm in Earth Engine
+
+::: {.notes}
+You walk through
+:::
