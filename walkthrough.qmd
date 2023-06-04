@@ -1,7 +1,7 @@
 ---
 title: "An introduction to Google Earth Engine"
 title-slide-attributes:
-  data-background-image: /Images/_MODIS_Pic.jpg 
+  data-background-image: ./Images/_MODIS_Pic.jpg 
   data-background-size: cover
   data-background-opacity: "0.5"
 format: 
@@ -9,12 +9,13 @@ format:
     width: 950
     height: 950
     theme: dark
+    code-overflow: wrap
 css: walkthrough.css
 ---
 
 ## What is Google Earth Engine?
 
-![](/Images/EarthEngineSplashPage.png)
+![](./Images/EarthEngineSplashPage.png)
 
 ::: {.notes}
 Google Earth Engine is a platform for geospatial analysis. It provides access to satellite imagery and other remote sensing data. Earth Engine simplifies the task of processing geospatial data.
@@ -22,7 +23,7 @@ Google Earth Engine is a platform for geospatial analysis. It provides access to
 
 ## Earth Engine Code Editor
 
-![](/Images/EarthEngineEditor.png)
+![](./Images/EarthEngineEditor.png)
 
 ::: {.notes}
 The Earth Engine Code Editor is a web-based IDE for accessing the Earth Engine datasets and analysis library using javascript. We're going to do a quick walkthrough of the editor and some of its capabilities.
@@ -30,7 +31,7 @@ The Earth Engine Code Editor is a web-based IDE for accessing the Earth Engine d
 
 ## Inserting data using the search bar
 
-![](/Videos/SearchBar.gif){fig-align="center"}
+![](./Videos/SearchBar.gif){fig-align="center"}
 
 ::: {.notes}
 The search bar in Earth Engine Editor allows you to easily find and *import* datasets and satellite imagery for analysis. Here we're importing landsat 8 reflectance data.
@@ -38,11 +39,11 @@ The search bar in Earth Engine Editor allows you to easily find and *import* dat
 
 ## Browsing library reference
 
-![](/Videos/docquery.gif){fig-align="center"}
+![](./Videos/docquery.gif){fig-align="center"}
 
 ## The scripts pane
 
-![](/Videos/openscript.gif){fig-align="center"}
+![](./Videos/openscript.gif){fig-align="center"}
 
 ::: {.notes}
 The scripts tab allows you to access your scripts.
@@ -50,7 +51,7 @@ The scripts tab allows you to access your scripts.
 
 ## The assets pane
 
-![](/Videos/ImportingAssets.gif){fig-align="center"}
+![](./Videos/ImportingAssets.gif){fig-align="center"}
 
 ::: {.notes}
 This tab allows you to upload your own geospatial data into the editor. Here we will upload a shape file from the US flood inundation map repostiory.
@@ -63,7 +64,7 @@ verbally walk through:
 
 ## The inspector
 
-![](/Videos/inspector.gif){fig-align="center"}
+![](./Videos/inspector.gif){fig-align="center"}
 
 ::: {.notes}
 The inspector allows you to examine the assets being used or produced by a script.
@@ -73,7 +74,7 @@ The inspector allows you to examine the assets being used or produced by a scrip
 
 ## The console
 
-![](/Videos/console.gif){fig-align="center"}
+![](./Videos/console.gif){fig-align="center"}
 
 ::: {.notes}
 The console is where you can send messages to from your program. The console is also where error messages appear.
@@ -81,7 +82,7 @@ The console is where you can send messages to from your program. The console is 
 
 ## The map pane
 
-![](/Videos/MapPane.gif){fig-align="center"}
+![](./Videos/MapPane.gif){fig-align="center"}
 
 ::: {.notes}
 - In the map pane you can draw points, lines, or polygons and have those geometries show up in your script.
@@ -90,7 +91,7 @@ The console is where you can send messages to from your program. The console is 
 
 ## Finding locations likely to be inland ports using Earth Engine
   
-![](/Images/PortMap.png){fig-align="center"}
+![](./Images/PortMap.png){fig-align="center"}
 
 ::: {.notes}
 - The US has 12 major inland ports and over 100 smaller inland ports. Can we use Earth Engine to create a method that locates places likely to have a major port?
@@ -365,7 +366,7 @@ var lineToPoint = function(feature) {
 var intersectionPoints = selectedLines.map(lineToPoint);
 
 // Convert the intersectionPoints FeatureCollection to a List
-var intersectionPointsList = intersectionPoints
+var pointsList = intersectionPoints
                               .toList(intersectionPoints.size());
 
 // Center the map on the continental USA
@@ -385,7 +386,7 @@ Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 ```
 ## Viewing intersection points {auto-animate="true"} 
 
-```{.javascript code-line-numbers="66-67"}
+```{.javascript code-line-numbers="66-71"}
 // Load road data from US census bureau 
 var roads = ee.FeatureCollection("TIGER/2016/Roads");
 
@@ -433,7 +434,7 @@ var lineToPoint = function(feature) {
 var intersectionPoints = selectedLines.map(lineToPoint);
 
 // Convert the intersectionPoints FeatureCollection to a List
-var intersectionPointsList = intersectionPoints
+var pointsList = intersectionPoints
                               .toList(intersectionPoints.size());
 
 // Center the map on the continental USA
@@ -452,18 +453,42 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 
 // Add the filtered intersection points to the map
-Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
 
 ```
+## Bringing in population density
+
+![](./Images/AlabamaDens.png)
+
+Going to add the following line:
+
+```javascript
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
+```
+
+::: {.notes}
+Talk about how population density is a raster map where previously have used mostly vectors
+:::
+
 ## Sampling population densities {auto-animate="true"} 
 
-```{.javascript code-line-numbers="51-65"}
+```{.javascript code-line-numbers="57-67"}
 // Load road data from US census bureau 
 var roads = ee.FeatureCollection("TIGER/2016/Roads");
 
 // Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
 var hydrosheds =
 ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
 
 // Select just interstates using the MTFCC code
 var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
@@ -472,6 +497,9 @@ var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
 var filteredStreams = 
       hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
                 .filter(ee.Filter.eq('COUNTRY','United States'));
+
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
 
 // Perform a spatial join between filteredStreams
 // and interstates FeatureCollections
@@ -505,17 +533,13 @@ var lineToPoint = function(feature) {
 var intersectionPoints = selectedLines.map(lineToPoint);
 
 // Convert the intersectionPoints FeatureCollection to a List
-var intersectionPointsList = intersectionPoints
+var pointsList = intersectionPoints
                               .toList(intersectionPoints.size());
-
-// Create a sequence of numbers to use as IDs
-var ids = ee.List
-            .sequence(0, intersectionPoints.size().subtract(1));
 
 // Function to buffer a point and set an ID
 var bufferAndSetID = function(index) {
   // Get the point
-  var point = ee.Feature(intersectionPointsList.get(index));
+  var point = ee.Feature(pointsList.get(index));
   // Buffer the point
   var bufferedPoint = point.buffer(10000);
   // Set the ID
@@ -540,6 +564,1210 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 
 // Add the filtered intersection points to the map
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
+
+```
+## Sampling population densities {auto-animate="true"} 
+
+```{.javascript code-line-numbers="69-77"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var pointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Function to buffer a point and set an ID
+var bufferAndSetID = function(index) {
+  // Get the point
+  var point = ee.Feature(pointsList.get(index));
+  // Buffer the point
+  var bufferedPoint = point.buffer(10000);
+  // Set the ID
+  var bufferedPointWithID = bufferedPoint.set('ID', index);
+  // Return the buffered point with ID
+  return bufferedPointWithID;
+};
+
+// Create a sequence of numbers to use as IDs
+var ids = ee.List.sequence(
+                           0,
+                           intersectionPoints.size().subtract(1)
+                          );
+
+// Create a buffer at every intersection points
+// using the id's you just created
+var bufferedPoints = ee.FeatureCollection(ids.map(bufferAndSetID));
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
+
+```
+
+## Sampling population densities {auto-animate="true"} 
+
+```{.javascript code-line-numbers="79-86"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var pointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Function to buffer a point and set an ID
+var bufferAndSetID = function(index) {
+  // Get the point
+  var point = ee.Feature(pointsList.get(index));
+  // Buffer the point
+  var bufferedPoint = point.buffer(10000);
+  // Set the ID
+  var bufferedPointWithID = bufferedPoint.set('ID', index);
+  // Return the buffered point with ID
+  return bufferedPointWithID;
+};
+
+// Create a sequence of numbers to use as IDs
+var ids = ee.List.sequence(
+                           0,
+                           intersectionPoints.size().subtract(1)
+                          );
+
+// Create a buffer at every intersection points
+// using the id's you just created
+var bufferedPoints = ee.FeatureCollection(ids.map(bufferAndSetID));
+
+// Merge the buffered geometries
+var bufferedGeometries = ee.Geometry
+                           .MultiPolygon(bufferedPoints
+                                          .geometry()
+                                          .coordinates());
+
+// Clip the population density image to the buffered geometries
+var popDensYearBuffered = popDensYear.clip(bufferedGeometries);
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
 Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+
+// Add the filtered intersection points to the map
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
+
+```
+## Sampling population densities {auto-animate="true"} 
+
+```{.javascript code-line-numbers="88-105"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var pointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Function to buffer a point and set an ID
+var bufferAndSetID = function(index) {
+  // Get the point
+  var point = ee.Feature(pointsList.get(index));
+  // Buffer the point
+  var bufferedPoint = point.buffer(10000);
+  // Set the ID
+  var bufferedPointWithID = bufferedPoint.set('ID', index);
+  // Return the buffered point with ID
+  return bufferedPointWithID;
+};
+
+// Create a sequence of numbers to use as IDs
+var ids = ee.List.sequence(
+                           0,
+                           intersectionPoints.size().subtract(1)
+                          );
+
+// Create a buffer at every intersection points
+// using the id's you just created
+var bufferedPoints = ee.FeatureCollection(ids.map(bufferAndSetID));
+
+// Merge the buffered geometries
+var bufferedGeometries = ee.Geometry
+                           .MultiPolygon(bufferedPoints
+                                          .geometry()
+                                          .coordinates());
+
+// Clip the population density image to the buffered geometries
+var popDensYearBuffered = popDensYear.clip(bufferedGeometries);
+
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var sampledPoints = popDensYearBuffered.sampleRegions({
+    collection: randomPoints,
+    scale: 1000,
+    tileScale: 16
+  })
+  // Add the buffered area ID to each sampled point
+  sampledPoints = sampledPoints.map(function(point) {
+    return point.set('BufferedAreaID', feature.get('ID'));
+  });
+  return sampledPoints;
+};
+
+// Sample 10 random points within each buffered area
+var sampledPoints = bufferedPoints.map(samplePoints).flatten();
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
+Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+
+// Add the filtered intersection points to the map
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
+
+```
+
+## Finding mean population densities {auto-animate="true"} 
+
+```{.javascript code-line-numbers="107-118"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var pointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Function to buffer a point and set an ID
+var bufferAndSetID = function(index) {
+  // Get the point
+  var point = ee.Feature(pointsList.get(index));
+  // Buffer the point
+  var bufferedPoint = point.buffer(10000);
+  // Set the ID
+  var bufferedPointWithID = bufferedPoint.set('ID', index);
+  // Return the buffered point with ID
+  return bufferedPointWithID;
+};
+
+// Create a sequence of numbers to use as IDs
+var ids = ee.List.sequence(
+                           0,
+                           intersectionPoints.size().subtract(1)
+                          );
+
+// Create a buffer at every intersection points
+// using the id's you just created
+var bufferedPoints = ee.FeatureCollection(ids.map(bufferAndSetID));
+
+// Merge the buffered geometries
+var bufferedGeometries = ee.Geometry
+                           .MultiPolygon(bufferedPoints
+                                          .geometry()
+                                          .coordinates());
+
+// Clip the population density image to the buffered geometries
+var popDensYearBuffered = popDensYear.clip(bufferedGeometries);
+
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var sampledPoints = popDensYearBuffered.sampleRegions({
+    collection: randomPoints,
+    scale: 1000,
+    tileScale: 16
+  })
+  // Add the buffered area ID to each sampled point
+  sampledPoints = sampledPoints.map(function(point) {
+    return point.set('BufferedAreaID', feature.get('ID'));
+  });
+  return sampledPoints;
+};
+
+// Sample 10 random points within each buffered area
+var sampledPoints = bufferedPoints.map(samplePoints).flatten();
+
+// Define a reducer that calculates the mean 'population_density'
+var meanReducer = ee.Reducer.mean();
+
+// Group the 'sampledPoints' FeatureCollection by 'BufferedAreaID' 
+// and calculate the mean 'population_density' for each group
+var meanPopDens = sampledPoints.reduceColumns({
+  reducer: meanReducer.group({
+    groupField: 0,
+    groupName: 'BufferedAreaID',
+  }),
+  selectors: ['BufferedAreaID', 'population_density']
+});
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
+Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+
+// Add the filtered intersection points to the map
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
+
+```
+## Filtering out low density intersections {auto-animate="true"} 
+
+```{.javascript code-line-numbers="120-134"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var pointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Function to buffer a point and set an ID
+var bufferAndSetID = function(index) {
+  // Get the point
+  var point = ee.Feature(pointsList.get(index));
+  // Buffer the point
+  var bufferedPoint = point.buffer(10000);
+  // Set the ID
+  var bufferedPointWithID = bufferedPoint.set('ID', index);
+  // Return the buffered point with ID
+  return bufferedPointWithID;
+};
+
+// Create a sequence of numbers to use as IDs
+var ids = ee.List.sequence(
+                           0,
+                           intersectionPoints.size().subtract(1)
+                          );
+
+// Create a buffer at every intersection points
+// using the id's you just created
+var bufferedPoints = ee.FeatureCollection(ids.map(bufferAndSetID));
+
+// Merge the buffered geometries
+var bufferedGeometries = ee.Geometry
+                           .MultiPolygon(bufferedPoints
+                                          .geometry()
+                                          .coordinates());
+
+// Clip the population density image to the buffered geometries
+var popDensYearBuffered = popDensYear.clip(bufferedGeometries);
+
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var sampledPoints = popDensYearBuffered.sampleRegions({
+    collection: randomPoints,
+    scale: 1000,
+    tileScale: 16
+  })
+  // Add the buffered area ID to each sampled point
+  sampledPoints = sampledPoints.map(function(point) {
+    return point.set('BufferedAreaID', feature.get('ID'));
+  });
+  return sampledPoints;
+};
+
+// Sample 10 random points within each buffered area
+var sampledPoints = bufferedPoints.map(samplePoints).flatten();
+
+// Define a reducer that calculates the mean 'population_density'
+var meanReducer = ee.Reducer.mean();
+
+// Group the 'sampledPoints' FeatureCollection by 'BufferedAreaID' 
+// and calculate the mean 'population_density' for each group
+var meanPopDens = sampledPoints.reduceColumns({
+  reducer: meanReducer.group({
+    groupField: 0,
+    groupName: 'BufferedAreaID',
+  }),
+  selectors: ['BufferedAreaID', 'population_density']
+});
+
+// Transform the output of the reduceColumns method
+// to a FeatureCollection
+var meanPopDensList = ee.List(meanPopDens.get('groups'));
+var meanPopDensFC = ee.FeatureCollection(
+                          meanPopDensList.map(function(el)
+                                      {
+                                        var dict = ee.Dictionary(el);
+                                        return ee.Feature(null, dict);
+                                      }));
+
+// Filter the meanPopDensFC by the 'mean' property
+var filteredMeanPopDens = meanPopDensFC.filter(
+                                              ee.Filter.gt(
+                                                'mean', 100)
+                                              );
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
+Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+
+// Add the filtered intersection points to the map
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
+
+```
+## Filtering out low density intersections {auto-animate="true"} 
+
+```{.javascript code-line-numbers="136-140"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var pointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Function to buffer a point and set an ID
+var bufferAndSetID = function(index) {
+  // Get the point
+  var point = ee.Feature(pointsList.get(index));
+  // Buffer the point
+  var bufferedPoint = point.buffer(10000);
+  // Set the ID
+  var bufferedPointWithID = bufferedPoint.set('ID', index);
+  // Return the buffered point with ID
+  return bufferedPointWithID;
+};
+
+// Create a sequence of numbers to use as IDs
+var ids = ee.List.sequence(
+                           0,
+                           intersectionPoints.size().subtract(1)
+                          );
+
+// Create a buffer at every intersection points
+// using the id's you just created
+var bufferedPoints = ee.FeatureCollection(ids.map(bufferAndSetID));
+
+// Merge the buffered geometries
+var bufferedGeometries = ee.Geometry
+                           .MultiPolygon(bufferedPoints
+                                          .geometry()
+                                          .coordinates());
+
+// Clip the population density image to the buffered geometries
+var popDensYearBuffered = popDensYear.clip(bufferedGeometries);
+
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var sampledPoints = popDensYearBuffered.sampleRegions({
+    collection: randomPoints,
+    scale: 1000,
+    tileScale: 16
+  })
+  // Add the buffered area ID to each sampled point
+  sampledPoints = sampledPoints.map(function(point) {
+    return point.set('BufferedAreaID', feature.get('ID'));
+  });
+  return sampledPoints;
+};
+
+// Sample 10 random points within each buffered area
+var sampledPoints = bufferedPoints.map(samplePoints).flatten();
+
+// Define a reducer that calculates the mean 'population_density'
+var meanReducer = ee.Reducer.mean();
+
+// Group the 'sampledPoints' FeatureCollection by 'BufferedAreaID' 
+// and calculate the mean 'population_density' for each group
+var meanPopDens = sampledPoints.reduceColumns({
+  reducer: meanReducer.group({
+    groupField: 0,
+    groupName: 'BufferedAreaID',
+  }),
+  selectors: ['BufferedAreaID', 'population_density']
+});
+
+// Transform the output of the reduceColumns method
+// to a FeatureCollection
+var meanPopDensList = ee.List(meanPopDens.get('groups'));
+var meanPopDensFC = ee.FeatureCollection(
+                          meanPopDensList.map(function(el)
+                                      {
+                                        var dict = ee.Dictionary(el);
+                                        return ee.Feature(null, dict);
+                                      }));
+
+// Filter the meanPopDensFC by the 'mean' property
+var filteredMeanPopDens = meanPopDensFC.filter(
+                                              ee.Filter.gt(
+                                                'mean', 100)
+                                              );
+
+// Get the list indices of the points with a
+// population density greater than 100 people per sq km
+var filteredIds = filteredMeanPopDens.aggregate_array(
+                                      'BufferedAreaID'
+                                      );
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
+Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+
+// Add the filtered intersection points to the map
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
+
+```
+## Filtering out low density intersections {auto-animate="true"} 
+
+```{.javascript code-line-numbers="142-147"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var pointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Function to buffer a point and set an ID
+var bufferAndSetID = function(index) {
+  // Get the point
+  var point = ee.Feature(pointsList.get(index));
+  // Buffer the point
+  var bufferedPoint = point.buffer(10000);
+  // Set the ID
+  var bufferedPointWithID = bufferedPoint.set('ID', index);
+  // Return the buffered point with ID
+  return bufferedPointWithID;
+};
+
+// Create a sequence of numbers to use as IDs
+var ids = ee.List.sequence(
+                           0,
+                           intersectionPoints.size().subtract(1)
+                          );
+
+// Create a buffer at every intersection points
+// using the id's you just created
+var bufferedPoints = ee.FeatureCollection(ids.map(bufferAndSetID));
+
+// Merge the buffered geometries
+var bufferedGeometries = ee.Geometry
+                           .MultiPolygon(bufferedPoints
+                                          .geometry()
+                                          .coordinates());
+
+// Clip the population density image to the buffered geometries
+var popDensYearBuffered = popDensYear.clip(bufferedGeometries);
+
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var sampledPoints = popDensYearBuffered.sampleRegions({
+    collection: randomPoints,
+    scale: 1000,
+    tileScale: 16
+  })
+  // Add the buffered area ID to each sampled point
+  sampledPoints = sampledPoints.map(function(point) {
+    return point.set('BufferedAreaID', feature.get('ID'));
+  });
+  return sampledPoints;
+};
+
+// Sample 10 random points within each buffered area
+var sampledPoints = bufferedPoints.map(samplePoints).flatten();
+
+// Define a reducer that calculates the mean 'population_density'
+var meanReducer = ee.Reducer.mean();
+
+// Group the 'sampledPoints' FeatureCollection by 'BufferedAreaID' 
+// and calculate the mean 'population_density' for each group
+var meanPopDens = sampledPoints.reduceColumns({
+  reducer: meanReducer.group({
+    groupField: 0,
+    groupName: 'BufferedAreaID',
+  }),
+  selectors: ['BufferedAreaID', 'population_density']
+});
+
+// Transform the output of the reduceColumns method
+// to a FeatureCollection
+var meanPopDensList = ee.List(meanPopDens.get('groups'));
+var meanPopDensFC = ee.FeatureCollection(
+                          meanPopDensList.map(function(el)
+                                      {
+                                        var dict = ee.Dictionary(el);
+                                        return ee.Feature(null, dict);
+                                      }));
+
+// Filter the meanPopDensFC by the 'mean' property
+var filteredMeanPopDens = meanPopDensFC.filter(
+                                              ee.Filter.gt(
+                                                'mean', 100)
+                                              );
+
+// Get the list indices of the points with a
+// population density greater than 100 people per sq km
+var filteredIds = filteredMeanPopDens.aggregate_array(
+                                      'BufferedAreaID'
+                                      );
+
+// Get intersection points with high density
+var highDensityPoints = ee.FeatureCollection(
+                              filteredIds.map
+                                  (function(id) {
+                                     return pointsList.get(id);
+                                    }));
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
+Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+
+// Add the filtered intersection points to the map
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
+
+```
+## Display port candidates {auto-animate="true"} 
+
+```{.javascript code-line-numbers="174-179"}
+// Load road data from US census bureau 
+var roads = ee.FeatureCollection("TIGER/2016/Roads");
+
+// Load the WWF HydroSHEDS Free Flowing Rivers Network v1 dataset
+var hydrosheds =
+ee.FeatureCollection("WWF/HydroSHEDS/v1/FreeFlowingRivers");
+
+// Load the population density data
+var popDens = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Density");
+
+// Select just interstates using the MTFCC code
+var interstates = roads.filter(ee.Filter.eq('mtfcc', 'S1100'));
+
+// Filter out streams with an order less than 4
+var filteredStreams = 
+      hydrosheds.filter(ee.Filter.lte('RIV_ORD', 4))
+                .filter(ee.Filter.eq('COUNTRY','United States'));
+
+//Take the 1st population density map within the given date arange
+var popDensYear = popDens.filter(ee.Filter.date('2010-01-01', '2019-12-31')).first();
+
+// Perform a spatial join between filteredStreams
+// and interstates FeatureCollections
+var join = ee.Join.simple();
+var filter = ee.Filter.intersects({
+  leftField: '.geo',
+  rightField: '.geo'
+});
+
+var intersectionLines = join.apply(
+                              filteredStreams, 
+                              interstates,
+                              filter);
+
+// Sort by a random number and select the first N features
+var selectedLines = intersectionLines.sort('random').limit(10);
+
+// Function to convert line geometry to a point 
+var lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(lineToPoint);
+
+// Convert the intersectionPoints FeatureCollection to a List
+var pointsList = intersectionPoints
+                              .toList(intersectionPoints.size());
+
+// Function to buffer a point and set an ID
+var bufferAndSetID = function(index) {
+  // Get the point
+  var point = ee.Feature(pointsList.get(index));
+  // Buffer the point
+  var bufferedPoint = point.buffer(10000);
+  // Set the ID
+  var bufferedPointWithID = bufferedPoint.set('ID', index);
+  // Return the buffered point with ID
+  return bufferedPointWithID;
+};
+
+// Create a sequence of numbers to use as IDs
+var ids = ee.List.sequence(
+                           0,
+                           intersectionPoints.size().subtract(1)
+                          );
+
+// Create a buffer at every intersection points
+// using the id's you just created
+var bufferedPoints = ee.FeatureCollection(ids.map(bufferAndSetID));
+
+// Merge the buffered geometries
+var bufferedGeometries = ee.Geometry
+                           .MultiPolygon(bufferedPoints
+                                          .geometry()
+                                          .coordinates());
+
+// Clip the population density image to the buffered geometries
+var popDensYearBuffered = popDensYear.clip(bufferedGeometries);
+
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var sampledPoints = popDensYearBuffered.sampleRegions({
+    collection: randomPoints,
+    scale: 1000,
+    tileScale: 16
+  })
+  // Add the buffered area ID to each sampled point
+  sampledPoints = sampledPoints.map(function(point) {
+    return point.set('BufferedAreaID', feature.get('ID'));
+  });
+  return sampledPoints;
+};
+
+// Sample 10 random points within each buffered area
+var sampledPoints = bufferedPoints.map(samplePoints).flatten();
+
+// Define a reducer that calculates the mean 'population_density'
+var meanReducer = ee.Reducer.mean();
+
+// Group the 'sampledPoints' FeatureCollection by 'BufferedAreaID' 
+// and calculate the mean 'population_density' for each group
+var meanPopDens = sampledPoints.reduceColumns({
+  reducer: meanReducer.group({
+    groupField: 0,
+    groupName: 'BufferedAreaID',
+  }),
+  selectors: ['BufferedAreaID', 'population_density']
+});
+
+// Transform the output of the reduceColumns method
+// to a FeatureCollection
+var meanPopDensList = ee.List(meanPopDens.get('groups'));
+var meanPopDensFC = ee.FeatureCollection(
+                          meanPopDensList.map(function(el)
+                                      {
+                                        var dict = ee.Dictionary(el);
+                                        return ee.Feature(null, dict);
+                                      }));
+
+// Filter the meanPopDensFC by the 'mean' property
+var filteredMeanPopDens = meanPopDensFC.filter(
+                                              ee.Filter.gt(
+                                                'mean', 100)
+                                              );
+
+// Get the list indices of the points with a
+// population density greater than 100 people per sq km
+var filteredIds = filteredMeanPopDens.aggregate_array(
+                                      'BufferedAreaID'
+                                      );
+
+// Get intersection points with high density
+var highDensityPoints = ee.FeatureCollection(
+                              filteredIds.map
+                                  (function(id) {
+                                     return pointsList.get(id);
+                                    }));
+
+// Center the map on the continental USA
+Map.setCenter(-98.5833, 39.8333, 5);
+
+// Display the filtered FeatureCollection
+Map.addLayer(interstates, {color: 'green'}, 'Interstates');
+
+// Set visualization parameters
+var streamsVis = {
+  color: 'blue',
+  width: 1
+};
+
+// Add the filtered streams to the map
+Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
+
+// Add the filtered intersection points to the map
+Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
+
+// Add the filtered intersection points to the map
+Map.addLayer(
+             intersectionPoints,
+             {color: 'yellow',pointSize: 10},
+             'Filtered Intersection Points'
+             );
+
+// Display the filtered intersection points in red
+Map.addLayer(
+    highDensityPoints,
+    {color: 'red', pointSize: 10},
+    'High Density Intersection Points'
+    );
 
 ```
