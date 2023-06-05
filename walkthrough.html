@@ -541,13 +541,14 @@
 </section>
 <section id="finding-locations-likely-to-be-inland-ports-using-earth-engine" class="slide level2">
 <h2>Finding locations likely to be inland ports using Earth Engine</h2>
-
-<img data-src="./Images/PortMap.png" class="r-stretch quarto-figure-center"><aside class="notes">
+<p><img data-src="./Images/PortPic.png" style="width:70.0%"></p>
+<p><img data-src="./Images/PortMap.png" style="width:70.0%"></p>
+<aside class="notes">
 <ul>
 <li>The US has 12 major inland ports and over 100 smaller inland ports. Can we use Earth Engine to create a method that locates places likely to have a major port?</li>
 <li>Let’s assume that ports will:
 <ol type="1">
-<li>Be located at the nexus of major rivers and highways</li>
+<li>Be located at the nexus of major rivers and highways. This seems like a fair assumption since you have to get the containers into and out the ship.</li>
 <li>Be located in reasonably big cities.</li>
 </ol></li>
 </ul>
@@ -567,6 +568,19 @@
 <h2 data-id="quarto-animate-title">Viewing highways</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode numberSource javascript number-lines code-with-copy" data-id="quarto-animate-code"><code class="sourceCode javascript hljs"><span id="cb1-1" class="hljs-ln-code"><a href="#cb1-1"></a><span class="co">// Load road data from US census bureau </span></span>
 <span id="cb1-2" class="hljs-ln-code"><a href="#cb1-2"></a><span class="kw">var</span> roads <span class="op">=</span> ee<span class="op">.</span><span class="fu">FeatureCollection</span>(<span class="st">"TIGER/2016/Roads"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<aside class="notes">
+<p>This line loads the US census bereau’s 2016 TIGER dataset. This dataset is a collection of Features. Or a “FeatureCollection”. In google earth engine a feature is a data structure that represents a geographic object and properties associated with that object. FeatureCollections usually store vector data. Each object in a FeatureCollection typically contains geometry (point, line, polygon) and attributes associated with that geometry. In this case a road could be represented by a line and an attributes could be the road type and road name.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="viewing-highways-1" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Viewing highways</h2>
@@ -575,6 +589,19 @@
 <span id="cb2-3" class="hljs-ln-code"><a href="#cb2-3"></a></span>
 <span id="cb2-4" class="hljs-ln-code"><a href="#cb2-4"></a><span class="co">// Select just interstates using the MTFCC code</span></span>
 <span id="cb2-5" class="hljs-ln-code"><a href="#cb2-5"></a><span class="kw">var</span> interstates <span class="op">=</span> roads<span class="op">.</span><span class="fu">filter</span>(ee<span class="op">.</span><span class="at">Filter</span><span class="op">.</span><span class="fu">eq</span>(<span class="st">'mtfcc'</span><span class="op">,</span> <span class="st">'S1100'</span>))<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<aside class="notes">
+<p>This next line filters the “roads” FeatureCollection by the ‘mtfcc’ property. Each road has a string associated with ‘mtfcc’ that tells us if it is a highway, interstate, local road etc. By using the string ‘S1100’ we can select just the interstates from the roads data. This allows us to create an “interstates” feature collection.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="viewing-highways-2" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Viewing highways</h2>
@@ -589,6 +616,9 @@
 <span id="cb3-9" class="hljs-ln-code"><a href="#cb3-9"></a></span>
 <span id="cb3-10" class="hljs-ln-code"><a href="#cb3-10"></a><span class="co">// Display the filtered FeatureCollection</span></span>
 <span id="cb3-11" class="hljs-ln-code"><a href="#cb3-11"></a><span class="bu">Map</span><span class="op">.</span><span class="fu">addLayer</span>(interstates<span class="op">,</span> {<span class="dt">color</span><span class="op">:</span> <span class="st">'green'</span>}<span class="op">,</span> <span class="st">'Interstates'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="{notes}">
+<p>These next two lines display the geometries in the “interstates” FeatureCollection that we have created. First we center the map pane on the US. Then we use the Map.addLayer method to plot all the geometries in “interstates” on the map as a layer called “Interstates”. We also choose to color the interstates data green.</p>
+</div>
 </section>
 <section id="adding-streams" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Adding streams</h2>
@@ -607,6 +637,9 @@
 <span id="cb4-13" class="hljs-ln-code"><a href="#cb4-13"></a></span>
 <span id="cb4-14" class="hljs-ln-code"><a href="#cb4-14"></a><span class="co">// Display the filtered FeatureCollection</span></span>
 <span id="cb4-15" class="hljs-ln-code"><a href="#cb4-15"></a><span class="bu">Map</span><span class="op">.</span><span class="fu">addLayer</span>(interstates<span class="op">,</span> {<span class="dt">color</span><span class="op">:</span> <span class="st">'green'</span>}<span class="op">,</span> <span class="st">'Interstates'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="{notes}">
+<p>To incorporate stream data we need to add another FeatureCollection that has the flow-lines of the nations streams. We’re going to use the hydrosheds database because it is the dataset of river reaches that is included in the Earth Engine Catalog.</p>
+</div>
 </section>
 <section id="adding-streams-1" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Adding streams</h2>
@@ -630,6 +663,9 @@
 <span id="cb5-18" class="hljs-ln-code"><a href="#cb5-18"></a></span>
 <span id="cb5-19" class="hljs-ln-code"><a href="#cb5-19"></a><span class="co">// Display the filtered FeatureCollection</span></span>
 <span id="cb5-20" class="hljs-ln-code"><a href="#cb5-20"></a><span class="bu">Map</span><span class="op">.</span><span class="fu">addLayer</span>(interstates<span class="op">,</span> {<span class="dt">color</span><span class="op">:</span> <span class="st">'green'</span>}<span class="op">,</span> <span class="st">'Interstates'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="{notes}">
+<p>The HydroSHEDS dataset includes many small streams and is a global dataset. We can create a new FeatureCollection that is just the large streams in the United States. To do this we apply two filters to the dataset. One “ee.Filter.eq” searches through the ‘COUNTRY’ property of the feature collection and removes features where ‘COUNTRY’ isn’t equal to “United States”. The other filter “EE.Filter.lte” searches through the “RIV_ORD” property of all the features and only keeps features with a river order less than or equal to 4. Here river order is assocated with the average discharge flowing through the streams with larger river order numbers equating to more discharge.</p>
+</div>
 </section>
 <section id="adding-streams-2" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Adding streams</h2>
@@ -662,6 +698,9 @@
 <span id="cb6-27" class="hljs-ln-code"><a href="#cb6-27"></a></span>
 <span id="cb6-28" class="hljs-ln-code"><a href="#cb6-28"></a><span class="co">// Add the filtered streams to the map</span></span>
 <span id="cb6-29" class="hljs-ln-code"><a href="#cb6-29"></a><span class="bu">Map</span><span class="op">.</span><span class="fu">addLayer</span>(filteredStreams<span class="op">,</span> streamsVis<span class="op">,</span> <span class="st">'Filtered Streams'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="{notes}">
+<p>Now that we’ve filtered out all the small streams lets visualize what’s left. To do that we first create an object called “streamsVis”. This allows us to assign all the visualization parameters that we will use to a single object so that we don’t have to list them all in the second argument of the “Map.addLayer” method. This time instead of setting just the color of the geometries in the layer we also set the line width that the geometries will be displayed with.</p>
+</div>
 </section>
 <section id="finding-intersection-points" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Finding intersection points</h2>
@@ -707,6 +746,9 @@
 <span id="cb7-40" class="hljs-ln-code"><a href="#cb7-40"></a></span>
 <span id="cb7-41" class="hljs-ln-code"><a href="#cb7-41"></a><span class="co">// Add the filtered streams to the map</span></span>
 <span id="cb7-42" class="hljs-ln-code"><a href="#cb7-42"></a><span class="bu">Map</span><span class="op">.</span><span class="fu">addLayer</span>(filteredStreams<span class="op">,</span> streamsVis<span class="op">,</span> <span class="st">'Filtered Streams'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="{notes}">
+
+</div>
 </section>
 <section id="finding-intersection-points-1" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Finding intersection points</h2>
@@ -2199,10 +2241,10 @@
 <span id="cb20-173" class="hljs-ln-code"><a href="#cb20-173"></a></span>
 <span id="cb20-174" class="hljs-ln-code"><a href="#cb20-174"></a><span class="co">// Display the filtered intersection points in red</span></span>
 <span id="cb20-175" class="hljs-ln-code"><a href="#cb20-175"></a><span class="bu">Map</span><span class="op">.</span><span class="fu">addLayer</span>(</span>
-<span id="cb20-176" class="hljs-ln-code"><a href="#cb20-176"></a>    highDensityPoints<span class="op">,</span></span>
-<span id="cb20-177" class="hljs-ln-code"><a href="#cb20-177"></a>    {<span class="dt">color</span><span class="op">:</span> <span class="st">'red'</span><span class="op">,</span> <span class="dt">pointSize</span><span class="op">:</span> <span class="dv">10</span>}<span class="op">,</span></span>
-<span id="cb20-178" class="hljs-ln-code"><a href="#cb20-178"></a>    <span class="st">'High Density Intersection Points'</span></span>
-<span id="cb20-179" class="hljs-ln-code"><a href="#cb20-179"></a>    )<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-176" class="hljs-ln-code"><a href="#cb20-176"></a>            highDensityPoints<span class="op">,</span></span>
+<span id="cb20-177" class="hljs-ln-code"><a href="#cb20-177"></a>            {<span class="dt">color</span><span class="op">:</span> <span class="st">'red'</span><span class="op">,</span> <span class="dt">pointSize</span><span class="op">:</span> <span class="dv">10</span>}<span class="op">,</span></span>
+<span id="cb20-178" class="hljs-ln-code"><a href="#cb20-178"></a>            <span class="st">'High Density Intersection Points'</span></span>
+<span id="cb20-179" class="hljs-ln-code"><a href="#cb20-179"></a>            )<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="footer footer-default">
 
 </div>
