@@ -856,7 +856,7 @@ Map.addLayer(
 
 ```
 :::{notes}
-We'll now 
+We'll now use our bufferedPoints geometries (these geometries are now circles instead of true points since they were expanded in the buffering process) to select sub-regions of the population density image around the intersection points. The first line uses the MultiPolygon method to create a geometry that represents the collection of circles around our intersection points. This multipolygon geometry is then used to clip the population density image.
 :::
 
 ## Sampling population densities {auto-animate="true"} 
@@ -994,6 +994,13 @@ Map.addLayer(
              );
 
 ```
+:::{notes}
+Now let's define a function that allows us to sample pixels of the population density image inside of the buffered circles around each intersection point.
+
+To do this we create a samplePoints function that takes in a bufferedPoint (the feature in the input argument) . The geometry from the buffered point feature is used to demarcate a boundary from which 10 random points locations are sampled. These locations are then used to get the population density values at each sample location using the 'sampleRegions' method. The 10 population density values from each buffered region are then assigned an ID corresponding to the ID of the buffered points from which they were sampled.
+
+Finally we now map this samplePoints function onto bufferedPoints. This gives us a feature collection of feature collections. Each sub feature collection is a collection of 10 randomly sampled population density values within each circular buffer area as well as the bufferedpointID that the population density value was sampled from assigned as a property to each point feature. The sub-FeatureCollections are then flattened into a single FeatureCollection of point features using the "flatten" method.
+:::
 
 ## Finding mean population densities {auto-animate="true"} 
 
@@ -1143,6 +1150,18 @@ Map.addLayer(
              );
 
 ```
+
+:::{notes}
+We can now calculate the mean sampled population density of each buffered point area by creating a reducer object that uses the "mean" method to calculate the average of a set of numbers and return that average values as a "reduced" representative value of that set of numbers.
+
+Next we use the meanReducer object we just created as the reducer in the reduceColumns function that we are applying to the features inside of the sampledPoints featureCollection. The group function is used on the reducer to dicatate which property we want to group the features in the featureCollection by. In this case we want to group the features into different columns according to their bufferedAreaID and then take the average of those columns. The 'groupField' takes as input the index of the property inside of the features "property" list. 'groupName' specifies the name of of the output property that each reduced value will be assigned to. 
+
+Finally, selectors specifies which properties are going to be used in the reducing process. 'BufferedAreaID' is the property that we are reducing by so it is a 'selector'. 'population_density' is the property being reduced so it is also a selector.
+
+The output, meanPopDens, will be an ee.Dictionary where each entry represents a distinct 'BufferedAreaID' and its associated mean population density. 
+:::
+
+
 ## Filtering out low density intersections {auto-animate="true"} 
 
 ```{.javascript code-line-numbers="120-134"}
@@ -1307,6 +1326,17 @@ Map.addLayer(
              );
 
 ```
+
+:::{notes}
+Now that we have a mean, representative population density for each buffered zone around our intersection points lets filter out low density intersections. To do this we first need to transform the output of our reduceColumns operation to a featureCollection. This transformation is done by casting meanPopDens to a list of dictionary elements that is organized by the "groups" in the meanPopDens ee.Dictionary. Remember that each group in meanPopDens is a mean population value assigned to a key that represents the ID of the intersection point from which it was sampled around.
+
+This list is then cast to a FeatureCollection using the ee.FeatureCollection function. This is done by mapping a function that takes a dictionary element "el" in the meanPopDensList and then does first does two things:
+1. makes sure that the element is a actually an ee.Dictionary element by casting it as one.
+2. Creating a new feature that has a "null" geometry and has the properties outlined in the key, value combinations of the dictionary. 
+   
+Now that meanPopDensFC is a feature collection we can call the filter function and apply it to the collection. Here the we use the "gt" or greater than filter and apply it to the "mean" property of each feature in the FeatureCollection. This gets rid of all the features that have mean population density values lower than 100.
+:::
+
 ## Filtering out low density intersections {auto-animate="true"} 
 
 ```{.javascript code-line-numbers="136-140"}
@@ -1477,6 +1507,11 @@ Map.addLayer(
              );
 
 ```
+
+:::{notes}
+Now we have a new feature collection "filteredMeanPopDens" that only has features with mean population_densities greater than 100. We can extract the intersection point ID's associated with these areas by using the "aggregate_array" function. This function returns an array of the "BufferedAreaID" values found in "filteredMeanPopDens"
+:::
+
 ## Filtering out low density intersections {auto-animate="true"} 
 
 ```{.javascript code-line-numbers="142-147"}
@@ -1654,6 +1689,11 @@ Map.addLayer(
              );
 
 ```
+:::{notes}
+Finally we can now locate which intersectionPoints are in areas of high density. We do this by mapping a function that takes an ID as an argument and then uses that as an index into the list of intersection point features we created at the beginning of the script.
+:::
+
+
 ## Display port candidates {auto-animate="true"} 
 
 ```{.javascript code-line-numbers="174-179"}
@@ -1838,3 +1878,7 @@ Map.addLayer(
             );
 
 ```
+
+:::{notes}
+Now that we have our high density intersection points we can now display candidate port locations as a different color than the rest of the intersection points.
+:::
