@@ -10,6 +10,7 @@ format:
     height: 950
     theme: dark
     code-overflow: wrap
+    #self-contained: true
 css: walkthrough.css
 ---
 
@@ -143,7 +144,8 @@ Map.setCenter(-98.5833, 39.8333, 5);
 // Display the filtered FeatureCollection
 Map.addLayer(interstates, {color: 'green'}, 'Interstates');
 ```
-:::{notes}
+
+::: {.notes}
 These next two lines display the geometries in the "interstates" FeatureCollection that we have created. First we center the map pane on the US. Then we use the Map.addLayer method to plot all the geometries in "interstates" on the map as a layer called "Interstates". We also choose to color the interstates data green.
 :::
 
@@ -167,7 +169,7 @@ Map.setCenter(-98.5833, 39.8333, 5);
 Map.addLayer(interstates, {color: 'green'}, 'Interstates');
 ```
 
-:::{notes}
+::: {.notes}
 To incorporate stream data we need to add another FeatureCollection that has the flow-lines of the nations streams. We're going to use the hydrosheds database because it is the dataset of river reaches that is included in the Earth Engine Catalog.
 :::
 
@@ -196,7 +198,7 @@ Map.setCenter(-98.5833, 39.8333, 5);
 Map.addLayer(interstates, {color: 'green'}, 'Interstates');
 ```
 
-:::{notes}
+::: {.notes}
 The HydroSHEDS dataset includes many small streams and is a global dataset. We can create a new FeatureCollection that is just the large streams in the United States. To do this we apply two filters to the dataset. One "ee.Filter.eq" searches through the 'COUNTRY' property of the feature collection and removes features where 'COUNTRY' isn't equal to "United States". The other filter "EE.Filter.lte" searches through the "RIV_ORD" property of all the features and only keeps features with a river order less than or equal to 4. Here river order is assocated with the average discharge flowing through the streams with larger river order numbers equating to more discharge. 
 :::
 
@@ -233,7 +235,7 @@ var streamsVis = {
 // Add the filtered streams to the map
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 ```
-:::{notes}
+::: {.notes}
 Now that we've filtered out all the small streams lets visualize what's left. To do that we first create an object called "streamsVis". This allows us to assign all the visualization parameters that we will use to a single object so that we don't have to list them all in the second argument of the "Map.addLayer" method. This time instead of setting just the color of the geometries in the layer we also set the line width that the geometries will be displayed with.  
 :::
 
@@ -284,7 +286,7 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 ```
 
-:::{notes}
+::: {.notes}
 Now that we have FeatureCollections representing both major interstates and major rivers in the United States let's use these to create our first list of candidate port locations by using the assumption that a port will be located near the intersection of a major highway and river. To do this we have to find the places that interstates and rivers intersect. 
 
 We'll find these intersection points by performing a spatial join between the interstates and filteredStreams datasets. A spatial join is a way of combining two datasets based on their spatial relationship with one another. 
@@ -357,7 +359,7 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 ```
 
-:::{notes}
+::: {.notes}
 We wanted to find intersection points. The join that we performed gives us stream line segments that intersect interstates. To get to points lets create a function that converts the stream line segments into points. Before we do this we select a subset of lines from "intersectionLines" because examining all the intersectionLines ends up being slow (we're going to experiment with different ways to fix this tomorrow). Then we create a function called "lineToPoint" line to point takes a feature with a line geometry and then gets the centroid of that geometry. It then casts this centroid to an earth engine Feature by using the centroid point as the geometry for the new feature and appending the properties of the inputted line feature using the "feature.toDictionary" method.
 :::
 
@@ -430,7 +432,7 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 ```
 
-:::{notes}
+::: {.notes}
 To actually obtain a FeatureCollection of intersection points we now *map* this function onto the selectedLines FeatureCollection. The map function takes in the lineToPoint function and applies it to each feature in the 'selectedLines' FeatureCollection. This creates another FeatureCollection that is intersection points instead of intersection lines. We then convert these points into a list called "pointsList" this will come in handy later when we are trying to select intersection points that are located in areas with a high population density.
 :::
 
@@ -510,7 +512,7 @@ Map.addLayer(
              );
 
 ```
-:::{notes}
+::: {.notes}
 Now let's display intersectionPoints as a layer on the map (run this code and show the intersection points). Note that we have a now layer attribute "pointSize" that is specific to the point geometry.
 :::
 
@@ -625,7 +627,7 @@ Map.addLayer(
              );
 
 ```
-:::{notes}
+::: {.notes}
 The first step to sampling the population densities is to create a region around each intersection point so that we can obtain a representative population density value for each point. In earth engine the region around each point that we will create is called a "buffer". We also want to assign a unique index to each buffered point so that we can identify which intersection points have high population densities and which ones have low densities later on in the script.
 
 To create the buffer and set the id we will create a function called "bufferAndSetID". This function takes a single index value in as input. It then uses that value to get a point out of the list of point Features in pointsList. It then creates a circular buffer around that point with a radius of 10km using the buffer method. This creates a variable called "bufferedPoint". We then assigne this bufferedPoint an ID that corresponds to the index of the point in the pointsList that the bufferedPoint was created from. The function then returns this final "bufferedPointWithID" value.  
@@ -735,7 +737,7 @@ Map.addLayer(
              );
 
 ```
-:::{notes}
+::: {.notes}
 We now apply the "bufferAndSetID" function we just created to our pointsList. To do this we furst need to create a sequence of numbers that will correspond to the id's we will assign to each bufferedPoint. We then map the "bufferAndSetID" function onto each id. Remember each id corresponds to an index that refers to each intersectionPoint we are examining. This allows us to create a new list of bufferedPoints that is tagged with an id that links it to each intersectionPoint. We then turn this list of bufferedPoints into a FeatureCollection using the ee.FeatureCollection method. 
 :::
 
@@ -845,9 +847,6 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 
 // Add the filtered intersection points to the map
-Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
-
-// Add the filtered intersection points to the map
 Map.addLayer(
              intersectionPoints,
              {color: 'yellow',pointSize: 10},
@@ -855,7 +854,7 @@ Map.addLayer(
              );
 
 ```
-:::{notes}
+::: {.notes}
 We'll now use our bufferedPoints geometries (these geometries are now circles instead of true points since they were expanded in the buffering process) to select sub-regions of the population density image around the intersection points. The first line uses the MultiPolygon method to create a geometry that represents the collection of circles around our intersection points. This multipolygon geometry is then used to clip the population density image.
 :::
 
@@ -984,9 +983,6 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 
 // Add the filtered intersection points to the map
-Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
-
-// Add the filtered intersection points to the map
 Map.addLayer(
              intersectionPoints,
              {color: 'yellow',pointSize: 10},
@@ -994,7 +990,7 @@ Map.addLayer(
              );
 
 ```
-:::{notes}
+::: {.notes}
 Now let's define a function that allows us to sample pixels of the population density image inside of the buffered circles around each intersection point.
 
 To do this we create a samplePoints function that takes in a bufferedPoint (the feature in the input argument) . The geometry from the buffered point feature is used to demarcate a boundary from which 10 random points locations are sampled. These locations are then used to get the population density values at each sample location using the 'sampleRegions' method. The 10 population density values from each buffered region are then assigned an ID corresponding to the ID of the buffered points from which they were sampled.
@@ -1140,9 +1136,6 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 
 // Add the filtered intersection points to the map
-Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
-
-// Add the filtered intersection points to the map
 Map.addLayer(
              intersectionPoints,
              {color: 'yellow',pointSize: 10},
@@ -1151,7 +1144,7 @@ Map.addLayer(
 
 ```
 
-:::{notes}
+::: {.notes}
 We can now calculate the mean sampled population density of each buffered point area by creating a reducer object that uses the "mean" method to calculate the average of a set of numbers and return that average values as a "reduced" representative value of that set of numbers.
 
 Next we use the meanReducer object we just created as the reducer in the reduceColumns function that we are applying to the features inside of the sampledPoints featureCollection. The group function is used on the reducer to dicatate which property we want to group the features in the featureCollection by. In this case we want to group the features into different columns according to their bufferedAreaID and then take the average of those columns. The 'groupField' takes as input the index of the property inside of the features "property" list. 'groupName' specifies the name of of the output property that each reduced value will be assigned to. 
@@ -1316,9 +1309,6 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 
 // Add the filtered intersection points to the map
-Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
-
-// Add the filtered intersection points to the map
 Map.addLayer(
              intersectionPoints,
              {color: 'yellow',pointSize: 10},
@@ -1327,7 +1317,7 @@ Map.addLayer(
 
 ```
 
-:::{notes}
+::: {.notes}
 Now that we have a mean, representative population density for each buffered zone around our intersection points lets filter out low density intersections. To do this we first need to transform the output of our reduceColumns operation to a featureCollection. This transformation is done by casting meanPopDens to a list of dictionary elements that is organized by the "groups" in the meanPopDens ee.Dictionary. Remember that each group in meanPopDens is a mean population value assigned to a key that represents the ID of the intersection point from which it was sampled around.
 
 This list is then cast to a FeatureCollection using the ee.FeatureCollection function. This is done by mapping a function that takes a dictionary element "el" in the meanPopDensList and then does first does two things:
@@ -1497,9 +1487,6 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 
 // Add the filtered intersection points to the map
-Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
-
-// Add the filtered intersection points to the map
 Map.addLayer(
              intersectionPoints,
              {color: 'yellow',pointSize: 10},
@@ -1508,7 +1495,7 @@ Map.addLayer(
 
 ```
 
-:::{notes}
+::: {.notes}
 Now we have a new feature collection "filteredMeanPopDens" that only has features with mean population_densities greater than 100. We can extract the intersection point ID's associated with these areas by using the "aggregate_array" function. This function returns an array of the "BufferedAreaID" values found in "filteredMeanPopDens"
 :::
 
@@ -1679,9 +1666,6 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 
 // Add the filtered intersection points to the map
-Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
-
-// Add the filtered intersection points to the map
 Map.addLayer(
              intersectionPoints,
              {color: 'yellow',pointSize: 10},
@@ -1689,14 +1673,14 @@ Map.addLayer(
              );
 
 ```
-:::{notes}
+::: {.notes}
 Finally we can now locate which intersectionPoints are in areas of high density. We do this by mapping a function that takes an ID as an argument and then uses that as an index into the list of intersection point features we created at the beginning of the script.
 :::
 
 
 ## Display port candidates {auto-animate="true"} 
 
-```{.javascript code-line-numbers="174-179"}
+```{.javascript code-line-numbers="171-176"}
 // Load road data from US census bureau 
 var roads = ee.FeatureCollection("TIGER/2016/Roads");
 
@@ -1861,9 +1845,6 @@ var streamsVis = {
 Map.addLayer(filteredStreams, streamsVis, 'Filtered Streams');
 
 // Add the filtered intersection points to the map
-Map.addLayer(intersectionPoints, {color: 'yellow',pointSize: 10}, 'Filtered Intersection Points');
-
-// Add the filtered intersection points to the map
 Map.addLayer(
              intersectionPoints,
              {color: 'yellow',pointSize: 10},
@@ -1879,6 +1860,6 @@ Map.addLayer(
 
 ```
 
-:::{notes}
+::: {.notes}
 Now that we have our high density intersection points we can now display candidate port locations as a different color than the rest of the intersection points.
 :::

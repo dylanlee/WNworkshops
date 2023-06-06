@@ -1,0 +1,129 @@
+---
+title: "Earth Engine workshop exercises"
+title-slide-attributes:
+  data-background-image: ./Images/_DSWE.jpg 
+  data-background-size: contain
+  data-background-opacity: "0.8"
+format: 
+  revealjs:
+    width: 950
+    height: 950
+    theme: dark
+    code-overflow: wrap
+    self-contained: true
+css: walkthrough.css
+---
+
+## Can we simplify this script? {auto-animate=true}
+
+Exercise: Instead of returning a FeatureCollection of sampledPoints around each buffered point, modify the samplePoints function so that it:
+
+ 1. Takes the mean of all the *samplePoints* within a bufferzone using the same "reduceColumns" method I showed you earlier. 
+
+ 2. Creates a feature with a null geometry and the bufferzone mean assigned to the buffered point ID from which the points were sampled.
+
+ 3. Uses this new function and a mapping operation to create the *meanPopDensFC* variable without needing to compute *sampledPoints*, *meanPopDens*, or *meanPopDensList*.
+ 
+ *time:30 minutes*
+
+
+## Modified samplePoints function
+
+```javascript
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var sampledPoints = popDensYearBuffered.sampleRegions({
+    collection: randomPoints,
+    scale: 1000,
+    tileScale: 16
+  })
+  // Add the buffered area ID to each sampled point
+  sampledPoints = sampledPoints.map(function(point) {
+    return point.set('BufferedAreaID', feature.get('ID'));
+  });
+
+  // Calculate the mean 'population_density' for each group
+  var meanPopDens = sampledPoints.reduceColumns({
+    reducer: ee.Reducer.mean(),
+    selectors: ['population_density']
+  });
+  return ee.Feature(null, {
+    'BufferedAreaID': feature.get('ID'),
+    'mean': meanPopDens.get('mean')
+  });
+};
+
+// Sample 10 random points within each buffered area and calculate the mean population density
+var meanPopDensFC = bufferedPoints.map(samplePoints);
+```
+
+## Seperating out functions
+
+Another way to simplify might be to create a new module to store functions we have created in this script.
+
+### Exercise: 
+
+- Create an additional file called "Helpers". 
+- Then use the "Docs" tab in the lefthand pane to research how to include this file's exported functions into your port finding script.
+
+*time: 10 minutes*
+
+## How to include your helper module
+
+To include this module we will add the following line to the beginning of our port finding script:
+
+```javascript
+
+// Import the lineToPoint function
+var hlp = require('users/dylanblee/REUworkshop:Helpers');
+
+```
+
+## Put the lineToPoint function into your helper module
+
+### Exercise: 
+
+- Research how to export a function from a javascript script.
+- Migrate the "lineToPoint" function from port finder script to helper module.
+- Call lineToPoint from helper module in your modified script instead of from the main script.
+
+*time: 20 minutes*
+
+## lineToPoint in the helper module
+
+Here is what we added to the helper module:
+
+```javascript
+exports.lineToPoint = function(feature) {
+  // Get the geometry
+  var geom = feature.geometry();
+  // Get the centroid of the geometry
+  var centroid = geom.centroid();
+  // Create a new point feature
+  var pointFeature = ee.Feature(centroid, feature.toDictionary());
+  return pointFeature;
+};
+```
+
+```javascript
+and here is how we call this function from the helper module:
+// Apply the lineToPoint function to each element
+// in intersectionPoints
+var intersectionPoints = selectedLines.map(hlp.lineToPoint);
+```
+## Modify bufferAndSetID
+
+We would also like to put other functions we have created. For example, "bufferAndSetID". What stops us from doing the same thing we did with lineToPoint?
+
+### Exercise: 
+Try putting bufferAndSetID into your helper module and see what happens.
+
+*time: 15 minutes*
+
+## Why we can't seperate the bufferAndSetID function as-is
+
+We currently can't 
+
+
