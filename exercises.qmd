@@ -16,7 +16,9 @@ css: walkthrough.css
 
 ## Can we simplify this script? {auto-animate=true}
 
-Exercise: Instead of returning a FeatureCollection of sampledPoints around each buffered point, modify the samplePoints function so that it:
+### Exercise:
+
+Instead of returning a FeatureCollection of sampledPoints around each buffered point, modify the samplePoints function so that it:
 
  1. Takes the mean of all the *samplePoints* within a bufferzone using the same "reduceColumns" method I showed you earlier. 
 
@@ -57,6 +59,79 @@ var samplePoints = function (feature) {
 
 // Sample 10 random points within each buffered area and calculate the mean population density
 var meanPopDensFC = bufferedPoints.map(samplePoints);
+```
+
+## Can we get rid of needing to assign ID's?
+If we take the mean inside of samplePoints we could also do the filtering inside the function and return geometries without needing to access a bufferedPoint's ID. 
+
+### Exercise:
+Modify the "samplePoints" function so that it:
+1. doesn't need to assign an "ID" value to "BufferedAreaID". 
+2. Filters out mean population density values less than 100 people per sq. km.
+3. returns a "highDensityPoint" candidate directly.
+
+*time: 30 minutes*
+
+## Further modified sample points function
+
+```javascript
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var sampledPoints = popDensYearBuffered.sampleRegions({
+    collection: randomPoints,
+    scale: 1000,
+    tileScale: 16
+  })
+
+  // Calculate the mean 'population_density' for each group
+  var meanPopDens = sampledPoints.reduceColumns({
+    reducer: ee.Reducer.mean(),
+    selectors: ['population_density']
+  });
+
+  // Filter out mean population density values 
+  // less than 100 people per sq. km.
+  var mean = meanPopDens.get('mean');
+  if (mean < 100) {
+    return null;
+  }
+
+  // return a "highDensityPoint" candidate
+  return ee.Feature(geometry, {
+    'mean': mean
+  });
+};
+
+// Map highDensityPoints to get candidate points
+var highDensityPoints = bufferedPoints.map(samplePoints)
+```
+## Stripping out ID assignment from rest of script
+### Exercise:
+Remove ID assignment from 1st part of the script by:
+
+1. Rename the "bufferAndSetID" function to just "bufferPoint".
+
+2. Modify this new "bufferPoint" function so that it takes in a point feature instead of an index and then just buffers this point instead of both buffering and doing index assignment.
+
+3. Map this new function over the intersectionPoints featureCollection to get a new "bufferedPoints" featureCollection that doesn't have id's.
+
+*time: 20 minutes*
+
+## New bufferPoint function and bufferedPoints assignment
+
+```javascript
+// Function to buffer a point
+var bufferPoint = function(feature) {
+  // Buffer the point
+  var bufferedPoint = feature.buffer(10000);
+  // Return the buffered point
+  return bufferedPoint;
+};
+
+// Create a buffer at every intersection point
+var bufferedPoints = intersectionPoints.map(bufferPoint);
 ```
 
 ## Seperating out functions
@@ -113,17 +188,45 @@ and here is how we call this function from the helper module:
 // in intersectionPoints
 var intersectionPoints = selectedLines.map(hlp.lineToPoint);
 ```
-## Modify bufferAndSetID
+## modularizing bufferAndSetID
 
-We would also like to put other functions we have created. For example, "bufferAndSetID". What stops us from doing the same thing we did with lineToPoint?
+We would also like to modularize other functions we have created. For example, "bufferPoint". 
 
 ### Exercise: 
-Try putting bufferAndSetID into your helper module and see what happens.
+put "bufferPoint" into your helper module and call it from your script.
 
-*time: 15 minutes*
+*time: 10 minutes*
 
-## Why we can't seperate the bufferAndSetID function as-is
+## Modularizing the samplePoints function
 
-We currently can't 
+The "samplePoints" function is doing alot of work for us. Can we decompose this function and move some of its pieces out to our module?
 
+### Exercise:
+1. Create an exported "calculateMeanDensity" function inside of your "Helper" module that takes a geometry and a number of points to sample. 
+2. Call this function from inside of a modified "samplePoints" function.
+
+*time: 20 minutes*
+
+## new "calculateMeanDensity" function
+
+Added to "Helpers":
+
+```javascript
+// Function to calculate the mean 'population_density' for each group of sampled points
+exports.calculateMeanDensity = function (popDensYearBuffered, randomPoints) {
+  var sampledPoints = popDensYearBuffered.sampleRegions({
+    collection: randomPoints,
+    scale: 1000,
+    tileScale: 16
+  });
+
+  var meanPopDens = sampledPoints.reduceColumns({
+    reducer: ee.Reducer.mean(),
+    selectors: ['population_density']
+  });
+  
+  return meanPopDens.get('mean');
+};
+```
+## Calling "calculateMeanDensity" from "samplePoints"
 
