@@ -29,7 +29,7 @@ Instead of returning a FeatureCollection of sampledPoints around each buffered p
  *time:30 minutes*
 
 
-## Modified samplePoints function
+## Modified "samplePoints" function
 
 ```javascript
 // Function to sample random points within each buffered area
@@ -72,7 +72,7 @@ Modify the "samplePoints" function so that it:
 
 *time: 30 minutes*
 
-## Further modified sample points function
+## Further modified "samplePoints" function
 
 ```javascript
 // Function to sample random points within each buffered area
@@ -106,6 +106,7 @@ var samplePoints = function (feature) {
 
 // Map highDensityPoints to get candidate points
 var highDensityPoints = bufferedPoints.map(samplePoints)
+                                      .filter(ee.Filter.neq(null));
 ```
 ## Stripping out ID assignment from rest of script
 ### Exercise:
@@ -119,7 +120,7 @@ Remove ID assignment from 1st part of the script by:
 
 *time: 20 minutes*
 
-## New bufferPoint function and bufferedPoints assignment
+## New "bufferPoint" function and "bufferedPoints" assignment
 
 ```javascript
 // Function to buffer a point
@@ -156,7 +157,7 @@ var hlp = require('users/dylanblee/REUworkshop:Helpers');
 
 ```
 
-## Put the lineToPoint function into your helper module
+## Put the "lineToPoint" function into your helper module
 
 ### Exercise: 
 
@@ -166,7 +167,7 @@ var hlp = require('users/dylanblee/REUworkshop:Helpers');
 
 *time: 20 minutes*
 
-## lineToPoint in the helper module
+## "lineToPoint" in the helper module
 
 Here is what we added to the helper module:
 
@@ -181,14 +182,14 @@ exports.lineToPoint = function(feature) {
   return pointFeature;
 };
 ```
+and here is how we call this function:
 
 ```javascript
-and here is how we call this function from the helper module:
 // Apply the lineToPoint function to each element
 // in intersectionPoints
 var intersectionPoints = selectedLines.map(hlp.lineToPoint);
 ```
-## modularizing bufferAndSetID
+## Modularizing "bufferAndSetID"
 
 We would also like to modularize other functions we have created. For example, "bufferPoint". 
 
@@ -197,7 +198,7 @@ put "bufferPoint" into your helper module and call it from your script.
 
 *time: 10 minutes*
 
-## Modularizing the samplePoints function
+## Modularizing the "samplePoints" function
 
 The "samplePoints" function is doing alot of work for us. Can we decompose this function and move some of its pieces out to our module?
 
@@ -228,5 +229,90 @@ exports.calculateMeanDensity = function (popDensYearBuffered, randomPoints) {
   return meanPopDens.get('mean');
 };
 ```
-## Calling "calculateMeanDensity" from "samplePoints"
+## Calling "calculateMeanDensity" from new "samplePoints"
 
+```javascript
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var mean = hlp.calculateMeanDensity(popDensYearBuffered, randomPoints);
+  
+  // Filter out mean population density values less than 100 people per sq. km.
+  if (mean < 100) {
+    return null;
+  }
+
+  // return a "highDensityPoint" candidate
+  return ee.Feature(geometry, {
+    'mean': mean
+  });
+};
+```
+## Modularizing the "samplePoints" function
+
+### Exercise:
+Further simplify the "samplePoints" function by taking the logic that filters the population density values to return highDensityPoints into a function called "filterHighDensityPoints"
+
+*time: 10 minutes*
+
+## Exported "filterHighDensityPoints"
+```javascript
+// Function to filter out mean population density 
+// values less than 100 people per sq. km
+// and return a "highDensityPoint" candidate
+var filterHighDensityPoints = function (geometry, meanDensity) {
+  if (meanDensity < 100) {
+    return null;
+  }
+  
+  return ee.Feature(geometry, {
+    'mean': meanDensity
+  });
+};
+```
+
+## Modified "samplePoints"
+
+```javascript
+// Function to sample random points within each buffered area
+var samplePoints = function (feature) {
+  var geometry = feature.geometry();
+  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
+  var mean = hlp.calculateMeanDensity(popDensYearBuffered, randomPoints);
+  // return filtered mean population density values less than 100 people per sq. km.
+  return hlp.filterHighDensityPoints(geometry, mean);
+};
+```
+## Profiling code using the EE online editor
+![](./Images/Profiler.png)
+
+### Exercise:
+
+Write a short description of what each column in the profiler tab is describing.
+
+## Profiling code using the EE online editor
+
+### Exercise:
+
+1. Profile our refactored script. List some things that could be slowing our script down.
+2. Try to make a change to the script. Rerun the profiler again and see what changes.
+
+## Profiling code using the EE online editor
+
+We can do a more manual style of profiling to hone in on how changing the way we are getting intersection points speeds up or slows down the function.
+
+```javascript
+// Get a timestamp before calling the function
+var start = Date.now();
+
+// Call the function
+
+// Get a timestamp after calling the function
+var end = Date.now();
+
+// Calculate the execution time
+var executionTime = end - start;
+
+print('Execution time: ', executionTime + ' ms');
+```
