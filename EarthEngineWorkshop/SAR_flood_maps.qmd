@@ -1,0 +1,293 @@
+---
+title: "Flood Mapping in Earth Engine Using Synthetic Aperture Radar Imagery"
+title-slide-attributes:
+  data-background-image: ./Images/_MODIS_Pic.jpg 
+  data-background-size: contain
+  data-background-opacity: "0.8"
+format: 
+  revealjs:
+    width: 950
+    height: 950
+    theme: dark
+    code-overflow: wrap
+    self-contained: true
+css: walkthrough.css
+---
+## What are Synthetic Aperture Rader (SAR) images?
+Synthetic aperature radar images are synthetic images reconstructed by active sensors that emit in the microwave portion of the EM spectrum.
+
+![](./Images/SARsat.png)
+
+::: {.notes}
+SAR satellites continuously emit radio waves as they orbit the earth. These waves bounce off the earth surface and some of them return back to the receiver of the satellite. In a traditional radar image the resolution of the image is dictated by the ratio of the length of the antenna to the length of the received wave. Since SAR waves are one the order of meters you would need an impractically long atenna to get good resolution images. Synthetic aperature solves this problem. As the satellite moves along it's orbit, the angle at which it receives readings back from a point on the surface changes. This allows the satellites receiver to rapidly collect multiple views of the same point on the surface and effectively extends the antenna length. The views are distinguished by the way the doppler effect and the changing distance of the satellite relative to the point on the surface come together to create frequency shifts. These changes in received frequency allow the different views of the point to be recognized by the receiver. This combination process is complex and involves estiamting the coherence of each received signal and then combining the different views in a way that ensures that the received signals are in-phase with each other. This makes backscatter from surface points other than the surface point of interest cancel out, while the signal from the point of interest gets boosted.
+:::
+
+## What portion of the EM spectrum does SAR sample?
+
+![](./Images/SAR_EM_spectrum.jpg)
+
+::: {.notes}
+The long wavelength of SAR waves makes the more sensative to surface structure, roughness, and big topographic features than the visible light portion of the spectrum. Long wavelengths also enable SAR waves to pierce through clouds.
+:::
+
+## What portion of the EM spectrum does SAR sample?
+
+![](./Images/SARwavelengths.png)
+
+::: {.notes}
+The Sentinel 1 data we will be working with is in the C-band.
+:::
+
+## What kinds of SAR imagery are we going to be working with?
+
+![](./Images/SARbackscatter.png)
+
+::: {.notes}
+We're going to be working with backscatter intensity images. Once SAR observations are collected they are initially complex values that represent both phase and signal amplitude. If we take the magnitude of these complex numbers we can arrive at a a backscatter intensity value that we can assign to a given location. This is an example of a backscatter intensity image.
+:::
+
+## What kinds of SAR imagery are we going to be working with?
+
+![](./Images/SARpolarity.png)
+
+::: {.notes}
+SAR sensors can transmit and receive waves in both vertical and horizontal polarities. Backscatter intensity images can be created from any one of these 4 polarity combinations.
+:::
+
+## How do people map floods from SAR images?
+
+![](./Images/SARsurfaces.png)
+
+## How do people map floods from SAR images?
+
+![](./Images/SARdoublebounce.png)
+
+
+## How do people map floods from SAR images?
+
+### Threshold based techniques:
+![](./Images/ImageThresholdingDiagram.png)
+
+- Look for bi-modality in histogram
+- Use this to assign pixels to water or not water
+   
+::: {.notes}
+These techniques are still widely used because they are easy to implement and can be relatively performant.
+:::
+
+## How do people map floods from SAR images?
+
+### Change detection
+![](./Images/FloodChange.png)
+
+::: {.notes}
+This is the method we will be using in this tutorial
+:::
+
+## How do people map floods from SAR images?
+
+### ML based techniques:
+![](./Images/SAR_CNN.png)
+
+::: {.notes}
+People have also had success training CNN models to do binary classification of flooded or not flooded pixels. The project I'm leading this summer will possibly be exploring using a CNN to do flood classification. For the purposes of this workshop we will be focusing on threshold based methods since the focus is on the Earth Engine API.
+:::
+
+## Using a change detection based technique to map a flood
+![](./Images/FloodedPhillipines.png)
+
+Tutorial material taken from: https://dges.carleton.ca/CUOSGwiki/index.php/Main_Page
+
+::: {.notes}
+In December, 2021 super typhoon Rai impacted the Philippines. It is one of the strongest storms to impact the country in recorded history. 
+:::
+
+## Downloading Region of Interest
+
+- Type "gadm.org" into your browsers address bar
+- Click on the "Data" link 
+- Click on the "country" link on the "Data" page
+- Select "Philippines"
+- Download shapefile
+- Unzip shapefile folder
+
+## Uploading shapefile to Earth Engine
+
+- Goto the "assets" tab in the left pane of the Earth Engine Editor
+- Click "NEW" and click on the Shape files field in the drop-down
+- Click "select" then enter the "gadm41_PHL_shp" folder
+- Hold down the Ctrl button while selecting the following files:
+  - gadm41_PHL_1.dbf
+  - gadm41_PHL_1.shp
+  - gadm41_PHL_1.shx
+- Under Asset ID rename asset to "PHL_1"
+- Wait 3-10 minutes
+
+## Import data into your script
+
+Now create a new script and load in your new geometry by:
+
+- Loading your new script into the script pane
+- Going back to the assets tab
+- Refreshing the assets tab
+- Putting cursor over "PHL_1"
+- Pressing the right arrow button
+- renaming import to "admin"
+
+## Filter data
+
+Now add this line to filter the import:
+
+```javascript
+var geometry=admin.filter(ee.Filter.eq('NAME_1','Southern Leyte'));
+```
+
+## Visualizing region of interest
+
+Add these lines to visualize the area you will be working inside of:
+
+```javascript
+Map.setCenter(125.0914,10.4887,8);
+Map.addLayer(geometry,{color:'grey'},'Southern Leyte');
+```
+
+## Setting time frames of interest
+
+We want to query SAR imagery from two time periods. One from before the event and the other from after the event has occured:
+
+```javascript
+var before_start= '2021-11-15';
+var before_end='2021-12-14';
+
+var after_start='2021-12-15';
+var after_end='2021-12-22';
+```
+
+## Set acquisition parametrs for SAR image query
+
+
+```javascript
+// Which polarities you are interested in
+var polarization = ("VH","VV");
+// Sentinel 1 only samples the Phillipines
+// When the Satellite is tracking from the 
+// North pole to the South pole
+var pass_direction = "DESCENDING";
+// Threshold over which to declare a differenced pixel flooded or not flooded
+var difference_threshold = 1.00;
+```
+
+## Query the Sentinel-1 data
+
+```javascript
+var aoi=geometry;
+
+var collection= ee.ImageCollection('COPERNICUS/S1_GRD')
+  .filter(ee.Filter.eq('instrumentMode','IW'))
+  .filter(ee.Filter.listContains('transmitterReceiverPolarisation', polarization))
+  .filter(ee.Filter.eq('orbitProperties_pass',pass_direction)) 
+  .filter(ee.Filter.eq('resolution_meters',10))
+  .filterBounds(aoi)
+  .select(polarization);
+
+var before_collection = collection.filterDate(before_start, before_end);
+var after_collection = collection.filterDate(after_start,after_end);
+```
+## Query the Sentinel-1 data
+
+```javascript
+function dates(imgcol){
+        var range = imgcol.reduceColumns(ee.Reducer.minMax(), ["system:time_start"]);
+        var printed = ee.String('from ')
+          .cat(ee.Date(range.get('min')).format('YYYY-MM-dd'))
+          .cat(' to ')
+          .cat(ee.Date(range.get('max')).format('YYYY-MM-dd'));
+        return printed;
+      }
+
+// print dates of before images to console
+var before_count = before_collection.size();
+print(ee.String('Tiles selected: Before Flood ').cat('(').cat(before_count).cat(')'),
+  dates(before_collection), before_collection);
+
+// print dates of after images to console
+var after_count = before_collection.size();
+print(ee.String('Tiles selected: After Flood ').cat('(').cat(after_count).cat(')'),
+  dates(after_collection), after_collection);
+```
+
+## Create mosaic from queried data
+
+```javascript
+// Create a mosaic of selected tiles and clip to study area
+var before = before_collection.mosaic().clip(aoi);
+var after = after_collection.mosaic().clip(aoi);
+
+// Apply reduce the radar speckle by smoothing  
+var smoothing_radius = 50;
+var before_filtered = before.focal_mean(smoothing_radius, 'circle', 'meters');
+var after_filtered = after.focal_mean(smoothing_radius, 'circle', 'meters');
+```
+
+## Visualize before and after SAR backscatter imagery
+
+```javascript
+Map.addLayer(before_filtered, {min:-25,max:0}, 'Before Flood',0);
+Map.addLayer(after_filtered, {min:-25,max:0}, 'After Flood',1);
+```
+
+## Calculate difference image and apply classification threshold
+
+```javascript
+// Calculate the difference between the before and after images
+var difference = after_filtered.divide(before_filtered);
+
+// Apply the predefined difference-threshold and create the flood extent mask 
+var threshold = difference_threshold;
+var difference_binary = difference.gt(threshold);
+
+// Difference layer
+Map.addLayer(difference,{min:0,max:2},"Difference Layer",0);
+```
+
+## Mask out perment water
+
+```javascript
+// Include JRC layer on surface water seasonality to mask flood pixels from areas
+// of "permanent" water (where there is water > 10 months of the year)
+var swater = ee.Image('JRC/GSW1_0/GlobalSurfaceWater').select('seasonality');
+var swater_mask = swater.gte(10).updateMask(swater.gte(10));
+
+// Flooded layer where perennial water bodies (water > 10 mo/yr) is assigned a 0 value
+var flooded_mask = difference_binary.where(swater_mask,0);
+// final flooded area without pixels in perennial waterbodies
+var flooded = flooded_mask.updateMask(flooded_mask);
+```
+
+## Mask out very small water bodies/noise
+
+```javascript
+// Compute connectivity of pixels to eliminate those connected to 8 or fewer neighbours
+// This operation reduces noise of the flood extent product 
+var connections = flooded.connectedPixelCount();    
+var flooded = flooded.updateMask(connections.gte(8));
+```
+
+## Mask out areas likely to be confused by double bounces
+
+```javascript
+// Mask out areas with more than 5 percent slope using a Digital Elevation Model 
+var DEM = ee.Image('WWF/HydroSHEDS/03VFDEM');
+var terrain = ee.Algorithms.Terrain(DEM);
+var slope = terrain.select('slope');
+var flooded = flooded.updateMask(slope.lt(5));
+```
+
+
+## Visualize flooded areas
+![](./Images/FinalFloodMapExerciseOutpt.png)
+
+```javascript
+// Flooded areas
+Map.addLayer(flooded,{palette:"0000FF"},'Flooded areas');
+```
