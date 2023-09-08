@@ -1,0 +1,27 @@
+# Summer 2023 EE workshops
+
+These workshops are designed to provide an introduction to using Google Earth Engine through the Earth Engine online code editor. Each workshop has a presentation along with one or more scripts designed to illutsrate the use of using Earth Engine to work with both raster and vector data. The links to the scripts will be provided below. Note that you need to have an Earth Engine account to access the scripts.
+
+Current workshops are:
+
+1. walkthrough.html
+The purpose of this script is to provide a general introduction to the online editor and then give participants a feel for the Earth Engine API by working iteratively building up a script designed to find locations likely to contain inland ports. The script that is built up in walkthrough.html can be found at:
+https://code.earthengine.google.com/10c3dbd43b331af2f8a6b1a073c7f5e2
+
+2. exercises.html
+This workshop expands on the information shared in the walkthrough. This workshop acts as a guide to a series of scripts located at: https://code.earthengine.google.com/?accept_repo=users/dylanblee/REUworkshop
+
+These scripts are iterations on the script developed in walkthrough.html and are titled RandRrefac# where # is the iteration of the script the walkthrough is currently on. Each iteration is designed to illustrate a possible simplification to the original script.
+
+The "helpers" script is also part of this workshop and is an example of how one would modularize functions so that they can be used accross multiple scripts.
+
+3. SAR_flood_maps.html
+This workshop is an example of another application of Earth Engine to analyzing Sythetic Aperature Radar (SAR) imagery.
+
+## Serving the workshops
+
+These workshops were created using [quarto](https://quarto.org/). To view them you should:
+1. Install quarto
+2. clone this repository to your local machine
+3. navigate to this repository
+4. run: "quarto preview {workshop}.qmd" where {workshop} is the workshop you want to view.
