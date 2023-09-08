@@ -10,7 +10,6 @@ format:
     height: 950
     theme: dark
     code-overflow: wrap
-    self-contained: true
 css: walkthrough.css
 ---
 
@@ -90,14 +89,8 @@ var samplePoints = function (feature) {
     reducer: ee.Reducer.mean(),
     selectors: ['population_density']
   });
-
-  // Filter out mean population density values 
-  // less than 100 people per sq. km.
+  
   var mean = meanPopDens.get('mean');
-  if (mean < 100) {
-    return null;
-  }
-
   // return a "highDensityPoint" candidate
   return ee.Feature(geometry, {
     'mean': mean
@@ -106,7 +99,7 @@ var samplePoints = function (feature) {
 
 // Map highDensityPoints to get candidate points
 var highDensityPoints = bufferedPoints.map(samplePoints)
-                                      .filter(ee.Filter.neq(null));
+                                      .filter(ee.Filter.gt('mean',100));
 ```
 ## Stripping out ID assignment from rest of script
 ### Exercise:

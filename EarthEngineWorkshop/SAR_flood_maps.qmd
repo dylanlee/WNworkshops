@@ -10,7 +10,7 @@ format:
     height: 950
     theme: dark
     code-overflow: wrap
-    self-contained: true
+#    self-contained: true
 css: walkthrough.css
 ---
 ## What are Synthetic Aperture Rader (SAR) images?
