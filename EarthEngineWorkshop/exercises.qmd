@@ -231,52 +231,13 @@ var samplePoints = function (feature) {
   var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
   var mean = hlp.calculateMeanDensity(popDensYearBuffered, randomPoints);
   
-  // Filter out mean population density values less than 100 people per sq. km.
-  if (mean < 100) {
-    return null;
-  }
-
   // return a "highDensityPoint" candidate
   return ee.Feature(geometry, {
     'mean': mean
   });
 };
 ```
-## Modularizing the "samplePoints" function
 
-### Exercise:
-Further simplify the "samplePoints" function by taking the logic that filters the population density values to return highDensityPoints into a function called "filterHighDensityPoints"
-
-*time: 10 minutes*
-
-## Exported "filterHighDensityPoints"
-```javascript
-// Function to filter out mean population density 
-// values less than 100 people per sq. km
-// and return a "highDensityPoint" candidate
-var filterHighDensityPoints = function (geometry, meanDensity) {
-  if (meanDensity < 100) {
-    return null;
-  }
-  
-  return ee.Feature(geometry, {
-    'mean': meanDensity
-  });
-};
-```
-
-## Modified "samplePoints"
-
-```javascript
-// Function to sample random points within each buffered area
-var samplePoints = function (feature) {
-  var geometry = feature.geometry();
-  var randomPoints = ee.FeatureCollection.randomPoints(geometry, 10);
-  var mean = hlp.calculateMeanDensity(popDensYearBuffered, randomPoints);
-  // return filtered mean population density values less than 100 people per sq. km.
-  return hlp.filterHighDensityPoints(geometry, mean);
-};
-```
 ## Profiling code using the EE online editor
 ![](./Images/Profiler.png)
 
