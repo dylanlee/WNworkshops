@@ -1,0 +1,5 @@
+outs:
+- md5: 45a619d790e0fa6118249abbfb9af299
+  size: 7365374
+  hash: md5
+  path: inspector.webm

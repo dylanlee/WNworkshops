@@ -1,0 +1,10 @@
+This directory contains workshops designed to provide an introduction to numpy and geopandas as well as the world of python based geospatial analysis of satellite imagery.
+
+# RasterVectorPython
+
+The intro to rioxarray and geopandas is adapted from the excellent resources created by Data Carpentry. Goto https://carpentries-incubator.github.io/geospatial-python/ to view the original tutorials.
+
+# NumpyandPandas
+
+This is a notebook covering the basics of numpy and pandas. This tutorial is adapted from the excellent resources created by Jay Alammar. Array visualizations were created by Alammar. Goto https://jalammar.github.io/visual-numpy/ and https://jalammar.github.io/gentle-visual-intro-to-data-analysis-python-pandas/ to see original tutorials.
+
