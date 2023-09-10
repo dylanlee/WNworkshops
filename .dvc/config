@@ -2,3 +2,5 @@
     remote = localremote
 ['remote "localremote"']
     url = /home/dylanblee/dvcdata/
+['remote "easystore"']
+    url = /mnt/chromeos/removable/easystore/
